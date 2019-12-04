@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using TestIt.WebApi.Models;
@@ -13,20 +15,13 @@ namespace TestIT.Listener
     {
         private readonly HttpClient client;
 
-        public PublicApiClient(string host, string secretKey, string userName)
+        public PublicApiClient(string host, string secretKey)
         {
             client = new HttpClient();
             client.DefaultRequestHeaders.Add("secretKeyBase64", secretKey);
-            client.DefaultRequestHeaders.Add("userName", userName);
             client.BaseAddress = new Uri(host);
-        }
-
-        public async Task AddAutoTestToTestCase(int globalId, string testName)
-        {
-            string url = "api/Public/AddAutoTestToTestCase/" + globalId;
-            StringContent content = new JsonContent(new PublicAutoTestModel { AutoTestExternalId = testName });
-
-            HttpResponseMessage responseMessage = await client.PostAsync(url, content);
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("PrivateToken", secretKey);
         }
 
         public async Task StartTestRun(string testRunId)
@@ -56,27 +51,26 @@ namespace TestIT.Listener
 
         public async Task SetAutoTestResult(PublicTestRunModel publicTestRunModel, IEnumerable<TestResult> testResults)
         {
-            string url = "api/Public/SetAutoTestResult";
-
+            string url = "/api/v2/testResults";
             foreach (ConfigurationModel config in publicTestRunModel.Configurations)
             {
                 foreach (AutoTestModel autoTest in publicTestRunModel.AutoTests)
                 {
+                    string autotestExternalId = autoTest.ExternalId;
                     foreach (TestResult testResult in testResults)
                     {
-                        if (autoTest.AutotestExternalId == testResult.Name)
+                        if (testResult.Name.Contains(autoTest.ExternalId))
                         {
                             PublicTestPointPostModel point = new PublicTestPointPostModel()
                             {
                                 TestRunId = publicTestRunModel.TestRunId,
-                                ConfigurationGlobalId = config.GlobalId,
                                 TestPlanGlobalId = publicTestRunModel.TestPlanGlobalId,
-                                Status = "Ready",
-                                Outcome = testResult.IsSuccess ? TestResultOutcomes.Passed : TestResultOutcomes.NotPassed,
+                                Outcome = testResult.Result.ToString(),
                                 Message = testResult.Messenge,
                                 StackTrace = testResult.StackTrace,
-                                AutoTestExternalId = testResult.Name,
-                                Name = testResult.Name
+                                AutoTestExternalId = autotestExternalId,
+                                ConfigurationGlobalId = config.GlobalId,
+
                             };
 
                             string jsonContent = JsonConvert.SerializeObject(point);
@@ -85,7 +79,13 @@ namespace TestIT.Listener
                         }
                     }
                 }
+
             }
+        }
+        public async Task CompleteTestRun(string testRunId)
+        {
+            string url = $"api/Public/CompleteTestRun/{testRunId}";
+            HttpResponseMessage responseMessage = await client.PostAsync(url, new JsonContent(string.Empty));
         }
 
         public void Dispose()
