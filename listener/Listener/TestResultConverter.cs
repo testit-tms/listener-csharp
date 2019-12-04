@@ -1,3 +1,5 @@
+using Listener.Models.Enums;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -28,7 +30,7 @@ namespace TestIT.Listener
                     TestResult testResult = new TestResult();
                     XmlNode outcomeNode = unitTestResult.Attributes.GetNamedItem("outcome");
                     if (outcomeNode != null)
-                        testResult.IsSuccess = outcomeNode.Value == TestResultOutcomes.Passed;
+                        testResult.Result = (TestResultOutcomes)Enum.Parse(typeof(TestResultOutcomes), outcomeNode.Value);
 
                     XmlNode testNameNode = unitTestResult.Attributes.GetNamedItem("testName");
                     if (testNameNode != null)
