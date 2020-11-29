@@ -1,8 +1,11 @@
-# listener-csharp
-Listener использует Public API для интеграции Test IT с внешними системами запуска автоматизированных тестов. Public API позволяет:
--	связывать автоматизированные тесты с тестами в Test IT
--	получать задания на запуск автоматизированных тестов
--	управлять запусками автоматизированных тестов
--	добавлять результаты автоматизированных тестов
+# Test IT - Listener
 
-[Документация по Public API и Listener](https://github.com/testit-tms/api/blob/master/README.md)
+The Listener is a program for handling activation requests and passing test runs.
+This is a simple example of integration. This should be done automatically in the final version.
+
+To begin:
+1. Make your own implementation of the TestRunner class. It should call your project with autotests.
+2. Update the variables in the Program class.
+3. If necessary, write your own implementation of the TestResultConverter class. Now the class is aimed at reports in trx format.
+
+[Documentation](https://docs.testit.software/docs/user-guide/swagger-api-v2.0-experimental)
