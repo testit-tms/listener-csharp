@@ -7,7 +7,7 @@ namespace Listener
 {
     public class TestRunner
     {
-        public void RunSelectedTests(string path, string pathToReport, List<AutoTestModel> autoTests)
+        public void RunSelectedTests(string pathToTests, string pathToReport, List<AutoTestModel> autoTests)
         {
             string filter;
 
@@ -29,10 +29,8 @@ namespace Listener
                 filter = stringBuilder.ToString();
             }
 
-            string arguments = $"test {path} --filter {filter} --logger:trx -r {path}{pathToReport}";
-
-            Process process = Process.Start($"dotnet", arguments);
-
+            string arguments = $"test {pathToTests} --filter {filter} --logger:trx -r {pathToTests}{pathToReport}";
+            Process process = Process.Start("dotnet", arguments);
             process.WaitForExit();
         }
     }

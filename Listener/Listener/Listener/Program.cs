@@ -15,8 +15,10 @@ namespace Listener
         public static readonly string domain = "https://demo.testit.software/";
         public static readonly string privateToken = "OGl6MnVTNzNXQXEyQm9RTUNo";
         public static readonly Guid configurationId = new Guid("15dbb164-c1aa-4cbf-830c-8c01ae14f4fb");
+        public static readonly Guid projectId = new Guid("5236eb3f-7c05-46f9-a609-dc0278896464");
         public static readonly ApiClient client = new ApiClient(domain, privateToken);
         public static readonly AutoTestResultsProvider resultsProvider = new AutoTestResultsProvider();
+        public static readonly TestRunner runner = new TestRunner();  
 
         public static readonly string PathToTests =
             Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName + "\\TestAutomationProject";
@@ -26,47 +28,34 @@ namespace Listener
         {
             while (true)
             {
-                PublicTestRunModel[] testRuns = (await client.GetAllActiveTestRuns()).Value;
+                List<PublicTestRunModel> testRuns = (await client.GetActiveTestRunsByProject(projectId));
                 PublicTestRunModel run = testRuns.FirstOrDefault();
 
                 if (run != null)
                 {
                     try
                     {
-                        Console.WriteLine("Тест-ран в работе. " + run.TestRunId);
-                        await client.StartTestRun(run.TestRunId.ToString());
+                        Console.WriteLine("Тест-ран в работе. " + run.Id);
+                        await client.StartTestRun(run.Id.ToString());
 
-                        List<PublicTestPointModel> testPoints = run.TestPoints.ToList();
-                        List<AutoTestModel> testsNames = GetTestNamesForTestPointsOfNeededConfig(testPoints, run);
-
-                        new TestRunner().RunSelectedTests(PathToTests, PartialPathToResult, testsNames);
+                        List<AutoTestModel> autotests = run.TestResults.Select(a => a.AutoTest).ToList();
+                        runner.RunSelectedTests(PathToTests, PartialPathToResult, autotests);
                         IEnumerable<TestResult> testResults = resultsProvider.GetLastResults(PathToTests + PartialPathToResult);
                         await client.SetAutoTestResult(run, testResults, configurationId);
 
-                        await client.CompleteTestRun(run.TestRunId.ToString());
-                        Console.WriteLine("Тест-ран завершён. " + run.TestRunId);
+                        await client.CompleteTestRun(run.Id.ToString());
+                        Console.WriteLine("Тест-ран завершён. " + run.Id);
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine("Возникла ошибка: " + ex.Message);
-                        await client.CompleteTestRun(run.TestRunId.ToString());
+                        await client.CompleteTestRun(run.Id.ToString());
                     }
                 }
                 else
                     Console.WriteLine("Ожидается тест-ран");
                 Thread.Sleep(DelayInMilliseconds);
             }
-        }
-
-        private static List<AutoTestModel> GetTestNamesForTestPointsOfNeededConfig(List<PublicTestPointModel> testPoints,
-            PublicTestRunModel currentTestRun)
-        {
-            var autoTestIds = new HashSet<Guid>();
-            foreach (PublicTestPointModel point in testPoints)
-                foreach (var testId in point.AutoTestIds)
-                    autoTestIds.Add(testId);
-
-            return currentTestRun.AutoTests.Where(t => autoTestIds.Contains((Guid)t.Id)).ToList();
         }
     }
 }
