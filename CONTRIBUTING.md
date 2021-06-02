@@ -6,8 +6,8 @@ This an open source project and we love to receive contributions from our commun
 Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
 
 ### Important resources:
- - Overall information about TestIT: <https://testit.software/> 
- - TestIT URL for tests: <https://demo.testit.software/>
+ - Overall information about Test IT: <https://testit.software/> 
+ - Test IT URL for tests: <https://demo.testit.software/>
 
 If you have any issues or you find someone's behavior unaccaptable, don't heistate to contact us at <support@testit.software>
 
